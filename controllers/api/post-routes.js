@@ -2,6 +2,8 @@ const router = require(`express`).Router();
 const { Post, User, Vote, Comment } = require(`../../models`);
 const sequelize = require(`../../config/connection`);
 const { update } = require("../../models/User");
+const withAuth = require(`../../utils/auth`);
+
 
 // get all users (i think it was supposed to say posts instead of users)
 router.get(`/`, (req, res) => {
@@ -65,11 +67,12 @@ router.get(`/:id`, (req, res) => {
         });
 });
 
-router.post(`/`, (req, res) => {
+router.post(`/`, withAuth, (req, res) => {
+    // console.log(req.session.user_id); --> Module said to change user_id: below to req.session.user_id, but that doesn't work
     Post.create({
         title: req.body.title,
         post_url: req.body.post_url,
-        user_id: req.body.user_id
+        user_id: req.session.user_id
     })
         .then(dbPostData => res.json(dbPostData))
         .catch(err => {
@@ -78,7 +81,7 @@ router.post(`/`, (req, res) => {
         });
 });
 // Make sure this PUT route is defined before the /:id PUT route, though. Otherwise, Express.js will think the word "upvote" is a valid parameter for /:id.
-router.put(`/upvote`, (req, res) => {
+router.put(`/upvote`, withAuth, (req, res) => {
     // make sure the session exists first
     if (req.session) {
         // custom static method 'upvote' created in models/Post.js
